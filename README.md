@@ -34,6 +34,7 @@ Run the migrations:
 
 
 ## Usage
+### Basic Usage
 
 Use simple_abs to figure out an "alternative" to show your users. You can get ahold of an alternative from either a Rails View or a Controller. 
 
@@ -76,6 +77,45 @@ converted!("buy_page")
 You can also force someone to a specific alternative of your page by using the query paramater "test_value" in your url: 
 
     http://draftin.com/buy_things?test_value=long
+
+### Multiple impression mode
+Sometimes it's important to do multiple impression tests. For example, if the test is about whether to show the short or long title for an item among 10 items on the buy page. 
+Then the regular ab test doesn't work that well as you get 10 impressions a page. And the statistics should base on how many item the user actually buys. 
+Say if version A shows 10 products a page and user browsed 2 pages and bought 3 items. Then what matters is 3/20 instead of a 0/1 conversion. 
+In this case, try this version instead. 
+
+```ruby
+def buy
+  @products = Product.last(10) # A query to search for product
+  @buy_page = ab_test_with_impression("buy_page", ["short", "medium", "long"], @products.size)
+
+  render action: 'buy' # Will render the 10 products here
+end
+```
+
+Then in your template, you can do this
+```erb
+<% @products.each do |product| %>
+  <% if @buy_page == "long" %>
+    Lots of extra information
+  <% end %>
+<% end %>
+```
+
+If they've already seen one of the alternatives, simple_abs figures that out from the permanent cookies of the user. In other words, if on the first visit, this method:
+
+```ruby
+ab_test("buy_page", ["short", "long"], 10)
+```
+Returns "short". On subsequent visits to the page from this same user, you will also get the value "short" from the ab_test method. However it will increse the participants by 10 every time you hit it.
+
+Once your user converts you can call "converted!(experiment name)" from a View or Controller: 
+
+```ruby
+@purchased_products = ["some items here"]
+converted_with_frequency!("buy_page", @purchased_products.size)
+
+### Statistics
 
 When you get some data you can look at it from a Rails console. 
 
