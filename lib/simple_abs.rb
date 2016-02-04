@@ -36,7 +36,7 @@ module SimpleAbs
     return test_value
   end
 
-  def ab_test_with_frequency(name, tests, impression)
+  def ab_test_with_frequency(name, tests, impression = 1)
 
     if is_bot?
       test_value = tests[rand(tests.size)]
@@ -70,7 +70,7 @@ module SimpleAbs
     end
   end
 
-  def converted_with_frequency!(name, frequency)
+  def converted_with_frequency!(name, frequency = 1)
 
     if !is_bot?
       test_value = cookies[name]

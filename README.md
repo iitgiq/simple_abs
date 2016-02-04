@@ -82,7 +82,7 @@ You can also force someone to a specific alternative of your page by using the q
 Sometimes it's important to do multiple impression tests. For example, if the test is about whether to show the short or long title for an item among 10 items on the buy page. 
 Then the regular ab test doesn't work that well as you get 10 impressions a page. And the statistics should base on how many item the user actually buys. 
 Say if version A shows 10 products a page and user browsed 2 pages and bought 3 items. Then what matters is 3/20 instead of a 0/1 conversion. 
-In this case, try this version instead. 
+In this case, try this version instead.
 
 ```ruby
 def buy
