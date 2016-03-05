@@ -78,6 +78,14 @@ You can also force someone to a specific alternative of your page by using the q
 
     http://draftin.com/buy_things?test_value=long
 
+### Abort operation
+
+Sometimes it makes sense to abort an experiment. So we can just mark an experiment as done, take out the impression. So it would be as if nothing has ever happened. To do that
+
+```ruby
+ab_test_aborted!("buy_page")
+```
+
 ### Multiple impression mode
 Sometimes it's important to do multiple impression tests. For example, if the test is about whether to show the short or long title for an item among 10 items on the buy page. 
 Then the regular ab test doesn't work that well as you get 10 impressions a page. And the statistics should base on how many item the user actually buys. 

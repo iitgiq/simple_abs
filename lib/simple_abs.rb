@@ -80,6 +80,17 @@ module SimpleAbs
     end
   end
 
+  def ab_test_aborted!(name)
+
+    if !is_bot?
+      test_value = cookies[name]
+      if test_value && cookies[name.to_s + "_converted"].blank?
+        find_or_create_by_experiment_and_which_method(name, test_value).decrement!(:participants)
+        cookies.permanent[name.to_s + "_converted"] = true
+      end
+    end
+  end
+
   def find_or_create_by_experiment_and_which_method(experiment, which)
     alternative = Alternative.where(experiment: experiment, which: which).first
 
