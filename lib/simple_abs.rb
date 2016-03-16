@@ -73,7 +73,7 @@ module SimpleAbs
   end
 
   def ab_test_save_cookie(ab_test_name, test_record, finished = nil)
-    cookies.permanent[test_record.experiment] = test_record.cookie_string(finished)
+    cookies.permanent[ab_test_name] = test_record.cookie_string(finished)
   end
   def ab_test_read_cookie(ab_test_name)
     JSON.parse(cookies[ab_test_name]).with_indifferent_access rescue nil
