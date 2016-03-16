@@ -23,12 +23,12 @@ module SimpleAbs
     if !test_json
       test_value = tests[rand(tests.size)]
       test_record = AbTest.create!(experiment: name, choice: test_value, impression: impression)
-      ab_test_save_cookie(name, test_record)
+      ab_test_save_cookie(ab_test_name, test_record)
     elsif !test_json[:finished]
       test_record = AbTest.find(test_json[:id])
       test_value = test_record.choice rescue test_json[:choice]
       test_record.increment!(:impression, impression)
-      ab_test_save_cookie(name, test_record)
+      ab_test_save_cookie(ab_test_name, test_record)
     else # Converted
       test_record = AbTest.find(test_json[:id])
       test_value = test_record.choice rescue test_json[:choice]
@@ -51,9 +51,9 @@ module SimpleAbs
         test_record.increment!(:conversion, conversion)
         test_record.update_attribute(:converted_at, Time.now()) unless test_record.converted_at.present?
         if finished
-          ab_test_save_cookie(name, test_record, 'converted')
+          ab_test_save_cookie(ab_test_name, test_record, 'converted')
         else
-          ab_test_save_cookie(name, test_record)
+          ab_test_save_cookie(ab_test_name, test_record)
         end
       end
     end
@@ -67,7 +67,7 @@ module SimpleAbs
       if test_value && test_value[:id]
         test_record = AbTest.find(test_json[:id])
         test_record.destroy if test_record
-        ab_test_save_cookie(name, test_record, 'aborted')
+        ab_test_save_cookie(ab_test_name, test_record, 'aborted')
       end
     end
   end
