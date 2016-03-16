@@ -18,19 +18,20 @@ module SimpleAbs
     return params[ab_test_name] if params[ab_test_name].present?
 
     # Now check of cookie exists
-    test_json = JSON.parse(cookies[ab_test_name]) rescue nil
+    test_json = ab_test_read_cookie(ab_test_name)
 
     if !test_json
       test_value = tests[rand(tests.size)]
       test_record = AbTest.create!(experiment: name, choice: test_value, impression: impression)
-      cookies.permanent[ab_test_name] = test_record.cookie_string
+      ab_test_save_cookie(name, test_record)
     elsif !test_json[:finished]
-      test_value = test_json[:choice]
-      test_record = AbTest.find(test_json['id'])
+      test_record = AbTest.find(test_json[:id])
+      test_value = test_record.choice rescue test_json[:choice]
       test_record.increment!(:impression, impression)
-      cookies.permanent[ab_test_name] = test_record.cookie_string # To be deleted
+      ab_test_save_cookie(name, test_record)
     else # Converted
-      test_value = test_json[:choice]
+      test_record = AbTest.find(test_json[:id])
+      test_value = test_record.choice rescue test_json[:choice]
     end
 
     return test_value
@@ -44,15 +45,15 @@ module SimpleAbs
   def ab_test_converted!(name, conversion: 1, finished: true)
     if !browser.bot?
       ab_test_name = ('ab_test_' + name).to_sym
-      test_json = JSON.parse(cookies[ab_test_name]) rescue nil
+      test_json = ab_test_read_cookie(ab_test_name)
       if test_json && !test_json[:finished]
-        test_record = AbTest.find(test_json['id'])
+        test_record = AbTest.find(test_json[:id])
         test_record.increment!(:conversion, conversion)
         test_record.update_attribute(:converted_at, Time.now()) unless test_record.converted_at.present?
         if finished
-          cookies.permanent[ab_test_name] = test_record.cookie_string('converted')
+          ab_test_save_cookie(name, test_record, 'converted')
         else
-          cookies.permanent[ab_test_name] = test_record.cookie_string # To be deleted
+          ab_test_save_cookie(name, test_record)
         end
       end
     end
@@ -61,22 +62,21 @@ module SimpleAbs
   def ab_test_aborted!(name)
     if !browser.bot?
       ab_test_name = ('ab_test_' + name).to_sym
-      test_json = JSON.parse(cookies[ab_test_name]) rescue nil
+      test_json = ab_test_read_cookie(ab_test_name)
       test_value = test_json
       if test_value && test_value[:id]
         test_record = AbTest.find(test_json[:id])
         test_record.destroy if test_record
-        cookies.permanent[ab_test_name] = test_record.cookie_string('aborted')
+        ab_test_save_cookie(name, test_record, 'aborted')
       end
     end
   end
 
-  def ab_test_save_cookie(test_record)
-    cookies.permanent[test_record.experiment] = test_record.cookie_string
+  def ab_test_save_cookie(ab_test_name, test_record, finished = nil)
+    cookies.permanent[test_record.experiment] = test_record.cookie_string(finished)
   end
-  def ab_test_read_cookie
-    test_json = JSON.parse(cookies[ab_test_name]) rescue nil
-    test_json && AbTest.find_by_id(test_json['id'])
+  def ab_test_read_cookie(ab_test_name)
+    JSON.parse(cookies[ab_test_name]).with_indifferent_access rescue nil
   end
   class AbTest < ActiveRecord::Base
     attr_accessible :experiment, :choice, :impression, :conversion, :converted_at
