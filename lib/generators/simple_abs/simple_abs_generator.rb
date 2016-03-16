@@ -3,7 +3,7 @@ require 'rails/generators/migration'
 
 class SimpleAbsGenerator < Rails::Generators::Base
   include Rails::Generators::Migration
-  
+
   def self.source_root
     @source_root ||= File.join(File.dirname(__FILE__), 'templates')
   end
@@ -17,7 +17,7 @@ class SimpleAbsGenerator < Rails::Generators::Base
   end
 
   def create_migration_file
-    migration_template 'migration.rb', 'db/migrate/create_alternatives_table.rb'
+    migration_template 'migration.rb', 'db/migrate/create_ab_tests_table.rb'
   end
 
 end
