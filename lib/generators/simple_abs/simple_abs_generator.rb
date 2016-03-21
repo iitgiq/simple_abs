@@ -17,7 +17,7 @@ class SimpleAbsGenerator < Rails::Generators::Base
   end
 
   def create_migration_file
-    migration_template 'migration.rb', 'db/migrate/create_ab_tests_table.rb'
+    migration_template 'migration.rb', 'db/migrate/create_ab_test.rb'
   end
 
 end
