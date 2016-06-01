@@ -29,7 +29,7 @@ module SimpleAbs
       test_value = test_record.choice rescue test_json[:choice]
       test_record.increment!(:impression, impression) if test_record
       ab_test_save_cookie(ab_test_name, test_record) if test_record
-    else # Converted
+    else # Converted, pull the current choice
       test_record = test_json[:id] && AbTest.find_by(id: test_json[:id], experiment: name)
       test_value = test_record.choice rescue test_json[:choice]
     end
@@ -60,6 +60,10 @@ module SimpleAbs
     end
   end
 
+  # For abort, we first pull the record, then we delete the db record.
+  # Then we set the cookie to aborted. It has two results:
+  # 1. The test will not touch db anymore
+  # 2. The choice will therefore persist.
   def ab_test_aborted!(name)
     if !browser.bot?
       ab_test_name = ('ab_test_' + name).to_sym
@@ -71,6 +75,50 @@ module SimpleAbs
         ab_test_save_cookie(ab_test_name, test_record, 'aborted')
       end
     end
+  end
+
+  # This is similar to impression, only that it's not going to do anything
+  # about the record. It will return default if given
+  def ab_test_peek(name, default: nil)
+    ab_test_name = ('ab_test_' + name).to_sym
+
+    # First the override. This is for test purposes
+    return params[ab_test_name] if params[ab_test_name].present?
+
+    # Now check if cookie exists
+    test_json = ab_test_read_cookie(ab_test_name)
+
+    if !test_json
+      # Do not initialize a test
+      test_value = default
+    elsif !test_json[:finished]
+      test_record = test_json[:id] && AbTest.find_by(id: test_json[:id], experiment: name)
+      test_value = test_record.choice rescue test_json[:choice]
+      # No impression increment here as we are just peeking it
+    else # Converted, pull the current choice
+      test_record = test_json[:id] && AbTest.find_by(id: test_json[:id], experiment: name)
+      test_value = test_record.choice rescue test_json[:choice]
+      # No operation here as we are just peeking
+    end
+
+    return test_value
+  end
+
+  def ab_test_status(name)
+    ab_test_name = ('ab_test_' + name).to_sym
+
+    # Now check if cookie exists
+    test_json = ab_test_read_cookie(ab_test_name)
+
+    if !test_json
+      return nonne
+    elsif !test_json[:finished]
+      return 'running'
+    else # Converted, pull the current choice. Either aborted or converted
+      return test_json[:finished]
+    end
+
+    return test_value
   end
 
   def ab_test_save_cookie(ab_test_name, test_record, finished = nil)
