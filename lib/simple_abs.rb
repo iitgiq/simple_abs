@@ -33,6 +33,12 @@ module SimpleAbs
       test_record = test_json[:id] && AbTest.find_by(id: test_json[:id], experiment: name)
       test_value = test_record.choice rescue test_json[:choice]
     end
+    # In case if the test value is not one of the given ones, fall back to
+    # a random one. Here we do not want to delete the db record and/or reset
+    # the cookie. One common hacky usage is to force a choice by
+    # ab_test_impression(name, ['mychoice']) but I don't want this kind of usage
+    # to destroy db/cookie records
+    test_value = tests[rand(tests.size)] unless tests.include?(test_value)
 
     return test_value
   end
@@ -111,14 +117,12 @@ module SimpleAbs
     test_json = ab_test_read_cookie(ab_test_name)
 
     if !test_json
-      return nonne
+      return 'none'
     elsif !test_json[:finished]
       return 'running'
     else # Converted, pull the current choice. Either aborted or converted
       return test_json[:finished]
     end
-
-    return test_value
   end
 
   def ab_test_save_cookie(ab_test_name, test_record, finished = nil)
