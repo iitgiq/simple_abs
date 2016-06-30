@@ -7,15 +7,15 @@ module SimpleAbs
   # 2. Seen this before. Update the record with more impressions.
   # 3. Already marked as converted. Skip and return the choice
   def ab_test_impression(name, tests, impression: 1)
-    if browser.bot?
-      test_value = tests[rand(tests.size)]
-      return test_value
-    end
-
     ab_test_name = ('ab_test_' + name).to_sym
 
     # First the override. This is for test purposes
     return params[ab_test_name] if params[ab_test_name].present?
+
+    if browser.bot?
+      test_value = tests[rand(tests.size)]
+      return test_value
+    end
 
     # Now check if cookie exists
     test_json = ab_test_read_cookie(ab_test_name)
