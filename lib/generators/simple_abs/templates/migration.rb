@@ -1,19 +1,16 @@
-class CreateAlternativesTable < ActiveRecord::Migration
+class CreateAbTest < ActiveRecord::Migration
   def self.up
-    create_table :alternatives, :force => true do |t|
-      t.string   "which"
-      t.integer  "participants", :default => 0
-      t.integer  "conversions",  :default => 0
+    create_table :ab_tests, :force => true do |t|
       t.text     "experiment"
+      t.string   "choice"
+      t.integer  "impression", :default => 0
+      t.integer  "conversion",  :default => 0
 
       t.timestamps
     end
-
-    add_index :alternatives, :which
-
   end
 
   def self.down
-    drop_table :alternatives
+    drop_table :ab_tests
   end
 end
