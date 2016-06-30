@@ -74,7 +74,7 @@ module SimpleAbs
     if !browser.bot?
       ab_test_name = ('ab_test_' + name).to_sym
       test_json = ab_test_read_cookie(ab_test_name)
-      if test_json && test_json[:id]
+      if test_json && !test_json[:finished] && test_json[:id]
         test_record = test_json[:id] && AbTest.find_by(id: test_json[:id], experiment: name)
         return unless test_record # Without a record we should probably skip.
         test_record.destroy if test_record
